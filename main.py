@@ -44,9 +44,14 @@ class WasteDataset(Dataset):
 transform = v2.Compose([
     v2.ToTensor(),
     v2.Resize((224, 224)),
+    v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+    v2.RandomRotation(degrees=15),
+    v2.GaussianNoise(mean=0.0, sigma=0.1),
+    v2.ElasticTransform(alpha=1, sigma=0.2)
 ])
 
-dataset_path = "/Users/badri/Documents/CMPM17-ML/CMPM-17-Final-WasteClassification/wastes"
+
+dataset_path = "/home/CMPM17-ML/CMPM-17-Final-WasteClassification/wastes"
 
 # Create dataset instances
 train_dataset = WasteDataset(os.path.join(dataset_path, 'train'), transform=transform)

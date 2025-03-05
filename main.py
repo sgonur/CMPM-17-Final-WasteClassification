@@ -89,3 +89,24 @@ class NeuralNet(nn.Module):
 
         self.linear1 = nn.Linear(64 * 20 * 20, 1028)
         self.linear2 = nn.Linear(1028, 10)
+
+#forward function
+def forward(self, x):
+    x = self.conv1(x)
+    x = self.relu(x)
+
+    x = self.conv2(x)
+    x = self.relu(x)
+    x = self.pool(x)
+
+    x = self.conv3(x)
+    x = self.relu(x)
+
+    x = self.conv4(x)
+    x = self.pool(x)
+
+    x = self.flatten(start_dim = 1)
+    x = self.linear1(x)
+    x = self.relu(x)
+    x = self.linear2(x)
+    return x

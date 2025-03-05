@@ -45,7 +45,7 @@ transform = v2.Compose([
     v2.ToTensor(),
     v2.Resize((224, 224)),
     v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-    v2.RandomRotation(degrees=15),
+    v2.RandomRotation(degrees=180),
     v2.GaussianNoise(mean=0.0, sigma=0.1),
     v2.ElasticTransform(alpha=1, sigma=0.2)
 ])
@@ -73,3 +73,19 @@ for batch_idx, (inputs, targets) in enumerate(test_loader):
     print(f"Input (image tensor shape): {inputs.shape}")
     print(f"Output (labels): {targets}")
 
+
+#Training Loop
+class NeuralNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(in_channels=3 , out_channels=32 , kernel_size=3 , padding=1)
+        self.conv2 = nn.Conv2d(in_channels=32 , out_channels=32 , kernel_size=3 , padding=1)
+        self.conv3 = nn.Conv2d(in_channels=32 , out_channels=64 , kernel_size=3 , padding=1)
+        self.conv4 = nn.Conv2d(in_channels=64 , out_channels=64 , kernel_size=3 , padding=1)
+
+        self.relu() = nn.ReLu()
+        self.pool = nn.MaxPool2d(2, 2)
+
+        self.linear1 = nn.Linear(64 * 20 * 20, 1028)
+        self.linear2 = nn.Linear(1028, 10)

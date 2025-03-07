@@ -47,7 +47,7 @@ class WasteDataset(Dataset):
 transform = v2.Compose([
     v2.ToTensor(),
     v2.Resize((224, 224)),
-    v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+    v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.3, hue=0.1),
     v2.RandomRotation(degrees=180),
     v2.GaussianNoise(mean=0.0, sigma=0.1),
     v2.ElasticTransform(alpha=1, sigma=0.2)

@@ -51,7 +51,7 @@ transform = v2.Compose([
 ])
 
 
-dataset_path = "/home/CMPM17-ML/CMPM-17-Final-WasteClassification/wastes"
+dataset_path = "/Users/badri/Documents/CMPM17-ML/CMPM-17-Final-WasteClassification/wastes"
 
 # Create dataset instances
 train_dataset = WasteDataset(os.path.join(dataset_path, 'train'), transform=transform)
@@ -84,7 +84,7 @@ class NeuralNet(nn.Module):
         self.conv3 = nn.Conv2d(in_channels=32 , out_channels=64 , kernel_size=3 , padding=1)
         self.conv4 = nn.Conv2d(in_channels=64 , out_channels=64 , kernel_size=3 , padding=1)
 
-        self.relu() = nn.ReLu()
+        self.relu = nn.ReLu()
         self.pool = nn.MaxPool2d(2, 2)
 
         self.linear1 = nn.Linear(64 * 20 * 20, 1028)
@@ -110,3 +110,19 @@ def forward(self, x):
     x = self.relu(x)
     x = self.linear2(x)
     return x
+
+model = NeuralNet()
+NUM_EPOCHS = 20
+loss_fn = nn.MSELoss()
+optimizer = torch.optim.Adam(lr = 0.001, weight_decay = 0.01)
+
+for i in range(NUM_EPOCHS):
+    for train_inputs, train_outputs in train_loader:
+        pred = model(train_inputs)
+        loss = loss_fn(pred, train_outputs)
+
+        print(math.sqrt(loss.item()))
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+

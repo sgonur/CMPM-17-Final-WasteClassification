@@ -84,6 +84,10 @@ class NeuralNet(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.flatten = nn.Flatten()
 
+        #added dropout layers
+        self.dropout1 = nn.Dropout(p=0.3)
+        self.dropout2 = nn.Dropout(p=0.5)
+
         # Adjusted Linear Layer Input Size (after pooling)
         self.linear1 = nn.Linear(64 * 56 * 56, 1028)  # Corrected from 20x20 to 56x56
         self.linear2 = nn.Linear(1028, 10)  # Assuming 10 classes
@@ -103,9 +107,13 @@ class NeuralNet(nn.Module):
         x = self.pool(x)
 
         x = self.flatten(x)
+        x = self.dropout2(x)
         x = self.linear1(x)
         x = self.relu(x)
+        
+        x = self.dropout2
         x = self.linear2(x)
+
         return x
 
 

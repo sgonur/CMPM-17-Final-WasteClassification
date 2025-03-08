@@ -69,70 +69,96 @@ for batch_idx, (inputs, targets) in enumerate(train_loader):
     print(f"Input (image tensor shape): {inputs.shape}")
     print(f"Output (labels): {targets}")
 
-
-# Define Neural Network Model
+# Define Neural Network Model with Dropout Fix
 class NeuralNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)
+        self.conv2 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv3 = nn.Conv2d(32, 64, 3, padding=1)
+        self.conv4 = nn.Conv2d(64, 64, 3, padding=1)
 
         self.relu = nn.ReLU()
         self.pool = nn.MaxPool2d(2, 2)
         self.flatten = nn.Flatten()
 
-        # Adjusted Linear Layer Input Size (after pooling)
-        self.linear1 = nn.Linear(64 * 56 * 56, 1028)  # Corrected from 20x20 to 56x56
-        self.linear2 = nn.Linear(1028, 10)  # Assuming 10 classes
+        # Dropout layers
+        self.dropout1 = nn.Dropout(p=0.3)
+        self.dropout2 = nn.Dropout(p=0.5)
+
+        # Fully connected layers
+        self.linear1 = nn.Linear(64 * 56 * 56, 1028)
+        self.linear2 = nn.Linear(1028, 10)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu(x)
-
-        x = self.conv2(x)
-        x = self.relu(x)
+        x = self.relu(self.conv1(x))
+        x = self.relu(self.conv2(x))
         x = self.pool(x)
 
-        x = self.conv3(x)
-        x = self.relu(x)
-
-        x = self.conv4(x)
+        x = self.relu(self.conv3(x))
+        x = self.relu(self.conv4(x))
         x = self.pool(x)
 
         x = self.flatten(x)
-        x = self.linear1(x)
-        x = self.relu(x)
+        x = self.relu(self.linear1(x))
+        x = self.dropout1(x)
+
+        x = self.dropout2(x)
         x = self.linear2(x)
+
         return x
+
+
+# Training Function with Fixed Model Saving
+def train_model(model, train_loader, loss_fn, optimizer, num_epochs=1, save_path="waste_classification.pth"):
+    if os.path.dirname(save_path):  # Only create if a directory is specified
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+    model.train()  # Set model to training mode
+    losses = []  # Track loss for each epoch
+
+    for epoch in range(num_epochs):
+        running_loss = 0.0
+
+        for train_inputs, train_outputs in train_loader:
+            optimizer.zero_grad()  # Reset gradients
+
+            pred = model(train_inputs)  # Forward pass
+
+            train_outputs = train_outputs.long()  # Ensure labels are long for CrossEntropyLoss
+            loss = loss_fn(pred, train_outputs)  # Compute loss
+
+            loss.backward()  # Backpropagation
+            optimizer.step()  # Update weights
+
+            running_loss += loss.item()
+
+        avg_loss = running_loss / len(train_loader)  # Compute average loss
+        losses.append(avg_loss)
+
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}")
+
+        #save the model
+        model_save_path = save_path.replace(".pth", f"_epoch_{epoch+1}.pth")
+        torch.save(model.state_dict(), model_save_path)
+        print(f"Model saved")
+
+    print("Training Complete!")
+    return model, losses
 
 
 # Initialize Model
 model = NeuralNet()
 
 # Training Configuration
-NUM_EPOCHS = 1
-loss_fn = nn.CrossEntropyLoss()  # Changed from MSELoss() to CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)  # Fixed optimizer
+NUM_EPOCHS = 3
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
 
-# Training Loop
-for epoch in range(NUM_EPOCHS):
-    model.train()  # Set model to training mode
-    running_loss = 0.0
+# Train Model
+trained_model, loss_history = train_model(model, train_loader, loss_fn, optimizer, num_epochs=NUM_EPOCHS, save_path="models/waste_classification.pth")
 
-    for train_inputs, train_outputs in train_loader:
-        optimizer.zero_grad()
+# Print Loss History
+print("Loss History:", loss_history)
 
-        pred = model(train_inputs)
-        loss = loss_fn(pred, train_outputs)
-
-        loss.backward()
-        optimizer.step()
-
-        running_loss += loss.item()
-
-    print(f"Epoch [{epoch+1}/{NUM_EPOCHS}], Loss: {running_loss / len(train_loader):.4f}")
-
-print("Training Complete!")

@@ -54,13 +54,14 @@ transform = v2.Compose([
 ])
 
 # Dataset Paths
-dataset_path = "/home/CMPM17-ML/CMPM-17-Final-WasteClassification/wastes"
+dataset_path = "/Users/badri/Documents/CMPM17-ML/CMPM-17-Final-WasteClassification/wastes"
 
 # Load Dataset with Image Cap
 train_dataset = WasteDataset(os.path.join(dataset_path, 'train'), transform=transform, max_images=100)
-
+test_dataset = WasteDataset(os.path.join(dataset_path, 'test'), transform=transform, max_images=100)
 # Create DataLoader
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
 # Print Training Data Information
 print("Training Data:")
@@ -147,17 +148,36 @@ def train_model(model, train_loader, loss_fn, optimizer, num_epochs=1, save_path
     print("Training Complete!")
     return model, losses
 
+def test_model(model, test_loader):
+    model.eval()
+    correct = 0 
+    total = 0 
+
+    with torch.no_grad():
+        for inputs, labels in test_loader:
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    accuracy = 100 * correct / total
+    print (f"Test Accuracy: {accuracy:.2f}%")
+    return accuracy        
 
 # Initialize Model
 model = NeuralNet()
 
 # Training Configuration
-NUM_EPOCHS = 3
+NUM_EPOCHS = 75
+
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
 
 # Train Model
 trained_model, loss_history = train_model(model, train_loader, loss_fn, optimizer, num_epochs=NUM_EPOCHS, save_path="models/waste_classification.pth")
+
+# Test Model
+test_accuracy = test_model(trained_model, test_loader)
 
 # Print Loss History
 print("Loss History:", loss_history)

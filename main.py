@@ -67,7 +67,7 @@ train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
 # Create DataLoaders
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, pin_memory=True)
 val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, pin_memory=True)
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, pin_memory=True)
+test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, pin_memory=True)
 
 # Print Training Data Information
 print("Training Data:")
@@ -87,14 +87,18 @@ class NeuralNet(nn.Module):
         self.bn2 = nn.BatchNorm2d(64)
         self.conv3 = nn.Conv2d(64, 128, 3, padding=1)
         self.bn3 = nn.BatchNorm2d(128)
+        self.conv4 = nn.Conv2d(128, 256, 3, padding=1)
+        self.bn4 = nn.BatchNorm2d(256)
+    
 
         self.relu = nn.ReLU()
         self.pool = nn.MaxPool2d(2, 2)
+        self.global_avg_pool = nn.AdaptiveAvgPool2d(1)  # Adaptive pooling layer
         self.flatten = nn.Flatten()
 
-        self.dropout1 = nn.Dropout(p=0.4)  # Increased dropout
+        self.dropout1 = nn.Dropout(p=0.3)  # Increased dropout
 
-        self.linear1 = nn.Linear(128 * 56 * 56, 512)
+        self.linear1 = nn.Linear(256, 512)
         self.linear2 = nn.Linear(512, 10)
 
     def forward(self, x):
@@ -104,6 +108,11 @@ class NeuralNet(nn.Module):
 
         x = self.relu(self.bn3(self.conv3(x)))
         x = self.pool(x)
+
+        x = self.relu(self.bn4(self.conv4(x)))
+        x = self.pool(x)
+
+        x = self.global_avg_pool(x) # The pooling becomes adaptive
 
         x = self.flatten(x)
         x = self.relu(self.linear1(x))
@@ -199,10 +208,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = NeuralNet().to(device)
 
 # Training Configuration
-NUM_EPOCHS = 100
+NUM_EPOCHS = 5
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.01)
 
 # Train Model
 trained_model, train_loss, val_loss = train_model(model, train_loader, val_loader, loss_fn, optimizer, num_epochs=NUM_EPOCHS, save_path="models/waste_classification.pth")
